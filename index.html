@@ -7,6 +7,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4/dist/l10n/th.js"></script>
 <style>
 :root{--bg:#F1F5F9;--sf:#fff;--sb:#1E293B;--sbh:#334155;--ac:#6366F1;--ach:#4F46E5;--al:#EEF2FF;--gr:#059669;--grb:#ECFDF5;--rd:#DC2626;--rdb:#FEF2F2;--am:#D97706;--amb:#FFFBEB;--bl:#2563EB;--blb:#EFF6FF;--or:#C2410C;--orb:#FFF7ED;--pu:#7C3AED;--pub:#F5F3FF;--gy:#475569;--gyb:#F1F5F9;--tx:#0F172A;--t2:#475569;--t3:#94A3B8;--bo:#E2E8F0;--s1:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);--s2:0 4px 12px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.05);--sl:0 20px 60px rgba(0,0,0,.15),0 4px 12px rgba(0,0,0,.08);--r:12px;--rs:8px;}
 *{font-family:"Sarabun",sans-serif;box-sizing:border-box;margin:0;padding:0;}
@@ -223,13 +226,21 @@ textarea{resize:none;}
   /* Form grids: single col */
   .fg2,.fg3{grid-template-columns:1fr;}
 
-  /* Modals: slide up from bottom */
-  .mo{padding:0;align-items:flex-end;}
-  .mb{border-radius:20px 20px 0 0;max-width:100%!important;margin:0!important;max-height:94dvh;display:flex;flex-direction:column;}
-  .mh{padding:1rem 1.25rem;flex-shrink:0;}
-  .mbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem;}
-  .msc{max-height:none!important;overflow-y:visible;}
-  .mf{flex-shrink:0;padding:.875rem 1rem;padding-bottom:calc(.875rem + env(safe-area-inset-bottom,0px));}
+  /* Modals: slide up from bottom — sit ABOVE bottom nav */
+  .mo{padding:0 0 calc(54px + env(safe-area-inset-bottom,0px));align-items:flex-end;}
+  .mb{border-radius:20px 20px 0 0;max-width:100%!important;margin:0!important;max-height:calc(93dvh - 54px);display:flex;flex-direction:column;background:white;}
+  .mh{padding:1rem 1.25rem;flex-shrink:0;background:white;border-radius:20px 20px 0 0;}
+  .mbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem;background:white;}
+  .msc{max-height:none!important;overflow-y:auto;}
+  .mf{flex-shrink:0;padding:.875rem 1rem 1.25rem;background:white;border-top:1px solid var(--bo);}
+
+  /* Equipment dropdown: always visible inline on mobile */
+  .ms-b{display:none!important;}
+  .ms-p{display:block!important;border:1.5px solid var(--bo);border-radius:var(--rs);box-shadow:none;margin-top:0;position:static;}
+  .ms-tg{display:none!important;}
+  .ms-l{max-height:200px;-webkit-overflow-scrolling:touch;}
+  .ms-it{min-height:46px;padding:10px 12px;}
+  .ms-it input[type=checkbox]{width:18px;height:18px;}
 
   /* List card: single col meta */
   .lc-m{grid-template-columns:1fr;}
@@ -273,6 +284,33 @@ textarea{resize:none;}
   .sc-g{grid-template-columns:repeat(5,1fr);}
   main{padding:1.75rem;}
 }
+/* ── Custom 24h time picker ─────────────────────────────── */
+.tpw{display:flex;align-items:center;gap:4px;border:1.5px solid var(--bo);border-radius:var(--rs);background:white;padding:.35rem .5rem;transition:border .15s,box-shadow .15s;}
+.tpw:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px rgba(99,102,241,.12);}
+.tpw select{border:none;background:none;font-size:.875rem;font-family:"Sarabun",sans-serif;color:var(--tx);outline:none;padding:.1rem 0;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;min-width:44px;flex:1;}
+.tpw select:focus{box-shadow:none;}
+.tpw-sep{color:var(--t2);font-weight:700;font-size:.875rem;flex-shrink:0;padding:0 2px;}
+.tpw-ico{color:var(--t3);flex-shrink:0;display:flex;align-items:center;}
+/* ── Flatpickr Thai override ────────────────────────────── */
+.flatpickr-calendar{font-family:"Sarabun",sans-serif!important;font-size:.875rem;}
+.flatpickr-months{background:var(--ac);}
+.flatpickr-month,.flatpickr-weekdays,.span.flatpickr-weekday{background:var(--ac);color:white;}
+.flatpickr-weekday{color:rgba(255,255,255,.8)!important;}
+.flatpickr-day.selected,.flatpickr-day.selected:hover{background:var(--ac)!important;border-color:var(--ac)!important;}
+.flatpickr-day.today{border-color:var(--ac)!important;}
+.numInputWrapper span:hover,.flatpickr-prev-month:hover svg,.flatpickr-next-month:hover svg{fill:rgba(255,255,255,.7)!important;}
+.flatpickr-current-month .numInput,.flatpickr-current-month .flatpickr-monthDropdown-months{color:white!important;font-family:"Sarabun",sans-serif!important;}
+/* ── Return condition images ─────────────────────────────── */
+.rimg-sec{border:1.5px solid #FDE68A;border-radius:var(--rs);padding:12px;background:#FFFBEB;margin-top:2px;}
+.rimg-sec-lbl{font-size:.78rem;font-weight:700;color:#92400E;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.rimg-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;min-height:4px;}
+.rimg-item{position:relative;width:88px;height:88px;flex-shrink:0;}
+.rimg-item img{width:88px;height:88px;object-fit:cover;border-radius:8px;cursor:pointer;display:block;border:1.5px solid var(--bo);}
+.rimg-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);border:none;color:white;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;}
+.rimg-del:hover{background:var(--rd);}
+.rimg-add{border:2px dashed #FDE68A;border-radius:var(--rs);padding:.75rem;text-align:center;cursor:pointer;transition:all .2s;background:white;display:flex;align-items:center;justify-content:center;gap:8px;font-size:.8125rem;color:#92400E;}
+.rimg-add:hover{border-color:var(--am);background:#FFFBEB;}
+@media(max-width:768px){.rimg-item{width:78px;height:78px;}.rimg-item img{width:78px;height:78px;}}
 </style>
 </head>
 <body>
@@ -445,7 +483,7 @@ textarea{resize:none;}
       <input type="hidden" id="r-id"><input type="hidden" id="r-orig">
       <div class="fg2">
         <div><label class="fl">ชื่อผู้เช่า <span class="req">*</span></label><input type="text" id="r-renter" placeholder="ชื่อผู้เช่า / ลูกค้า"></div>
-        <div><label class="fl">สถานะ</label><select id="r-sts"><option value="นัดแล้ว">📅 นัดแล้ว</option><option value="รอส่งของ">📦 รอส่งของ</option><option value="ส่งของแล้ว">🚚 ส่งของแล้ว</option><option value="เสร็จสิ้น">✅ เสร็จสิ้น</option><option value="ยกเลิก">❌ ยกเลิก</option></select></div>
+        <div><label class="fl">สถานะ</label><select id="r-sts" onchange="toggleRImgSec(this.value)"><option value="นัดแล้ว">📅 นัดแล้ว</option><option value="รอส่งของ">📦 รอส่งของ</option><option value="ส่งของแล้ว">🚚 ส่งของแล้ว</option><option value="เสร็จสิ้น">✅ เสร็จสิ้น</option><option value="ยกเลิก">❌ ยกเลิก</option></select></div>
       </div>
       <div>
         <label class="fl">รายการอุปกรณ์ที่เช่า <span class="req">*</span></label>
@@ -459,8 +497,18 @@ textarea{resize:none;}
         <div class="ms-tg" id="ms-tags"></div>
         <div id="ms-warn" class="aw" style="display:none;margin-top:8px;">⚠️ ไม่มีอุปกรณ์ว่างในคลัง โปรดตรวจสอบคลังอุปกรณ์</div>
       </div>
-      <div class="fg2"><div><label class="fl">วันที่เริ่มเช่า <span class="req">*</span></label><input type="date" id="r-sd"></div><div><label class="fl">เวลาเริ่มเช่า</label><input type="time" id="r-st"></div></div>
-      <div class="fg2"><div><label class="fl">วันที่สิ้นสุด <span class="req">*</span></label><input type="date" id="r-ed"></div><div><label class="fl">เวลาสิ้นสุด</label><input type="time" id="r-et"></div></div>
+      <div class="fg2">
+        <div><label class="fl">วันที่เริ่มเช่า <span class="req">*</span></label><input type="text" id="r-sd" placeholder="เลือกวันที่" readonly style="cursor:pointer;"></div>
+        <div><label class="fl">เวลาเริ่มเช่า</label>
+          <div class="tpw"><div class="tpw-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/></svg></div><select id="r-st-h" onchange="syncT('r-st')"></select><span class="tpw-sep">:</span><select id="r-st-m" onchange="syncT('r-st')"></select><input type="hidden" id="r-st"></div>
+        </div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">วันที่สิ้นสุด <span class="req">*</span></label><input type="text" id="r-ed" placeholder="เลือกวันที่" readonly style="cursor:pointer;"></div>
+        <div><label class="fl">เวลาสิ้นสุด</label>
+          <div class="tpw"><div class="tpw-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/></svg></div><select id="r-et-h" onchange="syncT('r-et')"></select><span class="tpw-sep">:</span><select id="r-et-m" onchange="syncT('r-et')"></select><input type="hidden" id="r-et"></div>
+        </div>
+      </div>
       <div class="fg2"><div><label class="fl">ชื่อผู้ติดต่อ</label><input type="text" id="r-cn" placeholder="ชื่อผู้ติดต่อ"></div><div><label class="fl">เบอร์ผู้ติดต่อ</label><input type="tel" id="r-cp" placeholder="0XX-XXX-XXXX"></div></div>
       <div class="fg2">
         <div><label class="fl">ความสำคัญ</label><select id="r-pri"><option value="ปกติ" selected>ปกติ</option><option value="สำคัญ">🔴 สำคัญ</option></select></div>
@@ -468,6 +516,19 @@ textarea{resize:none;}
       </div>
       <div><label class="fl">ตำหนิ <span class="opt">(ไม่บังคับ)</span></label><input type="text" id="r-def" placeholder="ตำหนิของอุปกรณ์ ถ้ามี..."></div>
       <div><label class="fl">หมายเหตุ</label><textarea id="r-notes" rows="2" placeholder="หมายเหตุเพิ่มเติม..."></textarea></div>
+      <!-- Return condition images (show when ส่งของแล้ว / เสร็จสิ้น) -->
+      <div id="rimg-sec" class="rimg-sec" style="display:none;">
+        <div class="rimg-sec-lbl">
+          <svg width="16" height="16" fill="none" stroke="#D97706" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          รูปสภาพอุปกรณ์หลังส่งคืน <span style="font-weight:400;color:#B45309;">(สูงสุด 4 รูป)</span>
+        </div>
+        <div class="rimg-grid" id="rimg-grid"></div>
+        <div class="rimg-add" id="rimg-add" onclick="document.getElementById('rimg-in').click()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          เพิ่มรูปภาพ
+        </div>
+        <input type="file" id="rimg-in" accept="image/*" style="display:none;" onchange="addRImg(this)">
+      </div>
     </div>
     <div class="mf"><button class="bg" onclick="closeRtM()" style="flex:1;">ยกเลิก</button><button class="bp" onclick="saveRental()" style="flex:2;justify-content:center;">บันทึก</button></div>
   </div>
@@ -489,7 +550,7 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 let equipment=[],rentals=[],history=[];
 let curSec='eq',curView='table',calDate=new Date();
 let eqCat='all',eqDir='asc',rtDir='desc',hiDir='desc';
-let msOpen=false,curImg=null;
+let msOpen=false,curImg=null,returnImgs=[];
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MO_L=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -497,11 +558,11 @@ const MO_S=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ
 
 // ── Mappers DB → JS ───────────────────────────────────────────────────────────
 const mEq=r=>({id:r.id,name:r.name,model:r.model||'',category:r.category||'อุปกรณ์',condition:r.condition||'',defects:r.defects||'',status:r.status,dateAdded:r.date_added||'',image:r.image||null});
-const mRt=r=>({id:r.id,renterName:r.renter_name,equipmentIds:r.equipment_ids||[],startDate:r.start_date||'',startTime:r.start_time?.slice(0,5)||'',endDate:r.end_date||'',endTime:r.end_time?.slice(0,5)||'',contactName:r.contact_name||'',contactPhone:r.contact_phone||'',status:r.status,priority:r.priority||'ปกติ',equipmentCondition:r.equipment_condition||'',defects:r.defects||'',notes:r.notes||''});
+const mRt=r=>({id:r.id,renterName:r.renter_name,equipmentIds:r.equipment_ids||[],startDate:r.start_date||'',startTime:r.start_time?.slice(0,5)||'',endDate:r.end_date||'',endTime:r.end_time?.slice(0,5)||'',contactName:r.contact_name||'',contactPhone:r.contact_phone||'',status:r.status,priority:r.priority||'ปกติ',equipmentCondition:r.equipment_condition||'',defects:r.defects||'',notes:r.notes||'',returnImages:r.return_images||[]});
 
 // ── Mappers JS → DB ───────────────────────────────────────────────────────────
 const eqDB=o=>({name:o.name,model:o.model||null,category:o.category,condition:o.condition,defects:o.defects||null,status:o.status,date_added:o.dateAdded||null,image:o.image||null});
-const rtDB=o=>({renter_name:o.renterName,equipment_ids:o.equipmentIds,start_date:o.startDate||null,start_time:o.startTime||null,end_date:o.endDate||null,end_time:o.endTime||null,contact_name:o.contactName||null,contact_phone:o.contactPhone||null,status:o.status,priority:o.priority||'ปกติ',equipment_condition:o.equipmentCondition||null,defects:o.defects||null,notes:o.notes||null});
+const rtDB=o=>({renter_name:o.renterName,equipment_ids:o.equipmentIds,start_date:o.startDate||null,start_time:o.startTime||null,end_date:o.endDate||null,end_time:o.endTime||null,contact_name:o.contactName||null,contact_phone:o.contactPhone||null,status:o.status,priority:o.priority||'ปกติ',equipment_condition:o.equipmentCondition||null,defects:o.defects||null,notes:o.notes||null,return_images:o.returnImages?.length?o.returnImages:null});
 
 // ── Loader & connection ───────────────────────────────────────────────────────
 function showLoader(on){document.getElementById('app-loader').style.display=on?'flex':'none';}
@@ -625,7 +686,7 @@ function renderTbl(data,tbId,emId,isH){
   em.style.display='none';
   const ef='openRtM',df=isH?'delHist':'delRental';
   tb.innerHTML=data.map(r=>`<tr${r.priority==='สำคัญ'?' class="imp"':''}>
-    <td style="font-weight:600;color:var(--tx);">${esc(r.renterName)}</td>
+    <td style="font-weight:600;color:var(--tx);">${esc(r.renterName)}${r.returnImages?.length?`<span class="badge b-am" style="margin-left:5px;font-size:10px;">📷 ${r.returnImages.length}</span>`:''}</td>
     <td style="font-size:.73rem;max-width:150px;"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(eqLbl(r.equipmentIds))}</div></td>
     <td style="font-size:.73rem;white-space:nowrap;">${fmtD(r.startDate,r.startTime)}</td>
     <td style="font-size:.73rem;white-space:nowrap;">${fmtD(r.endDate,r.endTime)}</td>
@@ -801,22 +862,30 @@ function openRtM(id){
     document.getElementById('rt-mt').textContent='แก้ไขรายการยืม / เช่า';
     document.getElementById('r-id').value=id;
     document.getElementById('r-renter').value=r.renterName;
-    document.getElementById('r-sd').value=r.startDate||'';document.getElementById('r-st').value=r.startTime||'';
-    document.getElementById('r-ed').value=r.endDate||'';document.getElementById('r-et').value=r.endTime||'';
+    fpSD?.setDate(r.startDate||'',true);fpED?.setDate(r.endDate||'',true);
+    setT('r-st',r.startTime||'');setT('r-et',r.endTime||'');
     document.getElementById('r-cn').value=r.contactName||'';document.getElementById('r-cp').value=r.contactPhone||'';
     document.getElementById('r-sts').value=r.status;document.getElementById('r-pri').value=r.priority||'ปกติ';
     document.getElementById('r-ec').value=r.equipmentCondition||'';
     document.getElementById('r-def').value=r.defects||'';document.getElementById('r-notes').value=r.notes||'';
     orig=r.equipmentIds||[];
+    returnImgs=r.returnImages||[];
+    toggleRImgSec(r.status);renderRImgs();
   }else{
     document.getElementById('rt-mt').textContent='เพิ่มรายการยืม / เช่า';
-    ['r-id','r-renter','r-sd','r-st','r-ed','r-et','r-cn','r-cp','r-def','r-notes'].forEach(x=>document.getElementById(x).value='');
+    ['r-id','r-renter','r-cn','r-cp','r-def','r-notes'].forEach(x=>document.getElementById(x).value='');
+    fpSD?.clear();fpED?.clear();
+    setT('r-st','');setT('r-et','');
     document.getElementById('r-sts').value='นัดแล้ว';document.getElementById('r-pri').value='ปกติ';document.getElementById('r-ec').value='';
+    returnImgs=[];toggleRImgSec('นัดแล้ว');renderRImgs();
   }
   document.getElementById('r-orig').value=JSON.stringify(orig);
   const avail=equipment.filter(e=>e.status!=='จำหน่าย'&&(e.status==='ว่าง'||orig.includes(e.id)));
   const warn=document.getElementById('ms-warn');warn.style.display=(!avail.length&&equipment.length)?'':'none';
-  msOpen=false;document.getElementById('ms-panel').style.display='none';document.getElementById('ms-btn').classList.remove('open');
+  // Mobile: panel always visible; Desktop: close and reset
+  const isMob=window.innerWidth<=768;
+  msOpen=false;
+  if(!isMob){document.getElementById('ms-panel').style.display='none';document.getElementById('ms-btn').classList.remove('open');}
   document.getElementById('ms-list').innerHTML=avail.map(e=>`<label class="ms-it"><input type="checkbox" name="eq-pick" value="${e.id}" ${orig.includes(e.id)?'checked':''} onchange="updTags()">${thumbH(e,30)}<span style="flex:1;">${esc(e.name)}${e.model?` <span style="color:var(--t3);font-size:.73rem;">(${esc(e.model)})</span>`:''} ${catB(e.category||'อุปกรณ์')}</span>${eqSB(e.status)}</label>`).join('');
   setTimeout(()=>updTags(),10);
   document.getElementById('rt-modal').classList.add('open');
@@ -825,9 +894,12 @@ function openRtM(id){
 function closeRtM(){document.getElementById('rt-modal').classList.remove('open');}
 
 async function saveRental(){
-  const renterName=document.getElementById('r-renter').value.trim(),startDate=document.getElementById('r-sd').value;
-  const startTime=document.getElementById('r-st').value,endDate=document.getElementById('r-ed').value;
-  const endTime=document.getElementById('r-et').value,contactName=document.getElementById('r-cn').value.trim();
+  const renterName=document.getElementById('r-renter').value.trim();
+  const startDate=fpSD?.selectedDates[0]?fpSD.formatDate(fpSD.selectedDates[0],'Y-m-d'):'';
+  const startTime=document.getElementById('r-st').value;
+  const endDate=fpED?.selectedDates[0]?fpED.formatDate(fpED.selectedDates[0],'Y-m-d'):'';
+  const endTime=document.getElementById('r-et').value;
+  const contactName=document.getElementById('r-cn').value.trim();
   const contactPhone=document.getElementById('r-cp').value.trim(),status=document.getElementById('r-sts').value;
   const priority=document.getElementById('r-pri').value,equipmentCondition=document.getElementById('r-ec').value;
   const defects=document.getElementById('r-def').value.trim(),notes=document.getElementById('r-notes').value.trim();
@@ -842,7 +914,7 @@ async function saveRental(){
   const toBsy=fin?[]:selEq;
   const eqUpd=[...toRel.map(eid=>{const e=equipment.find(x=>x.id===eid);if(e&&e.status!=='จำหน่าย'){e.status='ว่าง';return sb.from('equipment').update({status:'ว่าง'}).eq('id',eid);}}),...toBsy.map(eid=>{const e=equipment.find(x=>x.id===eid);if(e&&e.status!=='จำหน่าย'){e.status='ไม่ว่าง';return sb.from('equipment').update({status:'ไม่ว่าง'}).eq('id',eid);}})].filter(Boolean);
   await Promise.all(eqUpd);
-  const obj={renterName,startDate,startTime,endDate,endTime,contactName,contactPhone,status,priority,equipmentCondition,defects,notes,equipmentIds:selEq};
+  const obj={renterName,startDate,startTime,endDate,endTime,contactName,contactPhone,status,priority,equipmentCondition,defects,notes,equipmentIds:selEq,returnImages:returnImgs};
   const payload=rtDB(obj);
   if(fin){
     if(id){await sb.from('rentals').delete().eq('id',id);rentals=rentals.filter(r=>r.id!==id);const ih=history.find(r=>r.id===id);if(ih){const{data,e2}=await sb.from('history').update(payload).eq('id',id).select().single();if(!e2){const hi=history.findIndex(r=>r.id===id);if(hi>=0)history[hi]=mRt(data);}}else{const{data,e2}=await sb.from('history').insert(payload).select().single();if(!e2)history.unshift(mRt(data));}}
@@ -882,8 +954,98 @@ function closeSidebar(){
   document.body.style.overflow='';
 }
 
+// ── Custom 24h Time Picker ────────────────────────────────────────────────────
+function buildTimeOpts(selH,selM,val){
+  const h=val?val.slice(0,2):'',m=val?val.slice(3,5):'';
+  let ho='<option value="">ชม.</option>';
+  for(let i=0;i<24;i++){const v=String(i).padStart(2,'0');ho+=`<option value="${v}"${v===h?' selected':''}>${v}</option>`;}
+  selH.innerHTML=ho;
+  let mo='<option value="">น.</option>';
+  for(let i=0;i<60;i+=5){const v=String(i).padStart(2,'0');mo+=`<option value="${v}"${v===m?' selected':''}>${v}</option>`;}
+  selM.innerHTML=mo;
+}
+function syncT(id){
+  const h=document.getElementById(id+'-h').value,m=document.getElementById(id+'-m').value;
+  document.getElementById(id).value=(h&&m)?h+':'+m:'';
+}
+function setT(id,val){
+  const sh=document.getElementById(id+'-h'),sm=document.getElementById(id+'-m');
+  if(!sh||!sm)return;
+  buildTimeOpts(sh,sm,val||'');
+  document.getElementById(id).value=val||'';
+}
+
+// ── Return condition images ───────────────────────────────────────────────────
+function toggleRImgSec(status){
+  const show=['ส่งของแล้ว','เสร็จสิ้น'].includes(status);
+  document.getElementById('rimg-sec').style.display=show?'':'none';
+}
+function renderRImgs(){
+  const grid=document.getElementById('rimg-grid');
+  const addBtn=document.getElementById('rimg-add');
+  if(!grid)return;
+  grid.innerHTML=returnImgs.map((src,i)=>
+    `<div class="rimg-item">
+      <img src="${src}" onclick="showLb(this.src)" title="คลิกเพื่อขยาย">
+      <button class="rimg-del" onclick="delRImg(${i})" title="ลบรูป">×</button>
+    </div>`
+  ).join('');
+  if(addBtn)addBtn.style.display=returnImgs.length>=4?'none':'flex';
+}
+function addRImg(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=650,c=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+      returnImgs.push(c.toDataURL('image/jpeg',.70));
+      renderRImgs();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+function delRImg(i){returnImgs.splice(i,1);renderRImgs();}
+
+// ── Flatpickr Thai Date ───────────────────────────────────────────────────────
+let fpSD,fpED,fpEQD;
+function initFP(){
+  if(typeof flatpickr==='undefined')return;
+  const thL={...flatpickr.l10ns.th};
+  const beYear=(_, __, fp)=>{
+    setTimeout(()=>{
+      const ni=fp.calendarContainer?.querySelector('.numInput.cur-year');
+      if(ni&&ni._be!==true){
+        ni._be=true;
+        const orig=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+        Object.defineProperty(ni,'value',{
+          get(){return orig.get.call(this);},
+          set(v){orig.set.call(this,+v?String(+v+543):v);},
+          configurable:true
+        });
+        ni.value=fp.currentYear;
+      }
+    },0);
+  };
+  const opts={locale:thL,dateFormat:'Y-m-d',disableMobile:true,allowInput:false,
+    nextArrow:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>',
+    prevArrow:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>',
+    onReady:beYear,onMonthChange:beYear,onYearChange:beYear};
+  fpSD=flatpickr('#r-sd',opts);
+  fpED=flatpickr('#r-ed',opts);
+  fpEQD=flatpickr('#eq-date',{...opts,defaultDate:new Date()});
+  // Init time dropdowns with empty
+  setT('r-st','');setT('r-et','');
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadAll();
+initFP();
 </script>
 <!-- Mobile bottom nav -->
 <nav class="mob-bot" role="navigation">

@@ -311,6 +311,17 @@ textarea{resize:none;}
 .rimg-add{border:2px dashed #FDE68A;border-radius:var(--rs);padding:.75rem;text-align:center;cursor:pointer;transition:all .2s;background:white;display:flex;align-items:center;justify-content:center;gap:8px;font-size:.8125rem;color:#92400E;}
 .rimg-add:hover{border-color:var(--am);background:#FFFBEB;}
 @media(max-width:768px){.rimg-item{width:78px;height:78px;}.rimg-item img{width:78px;height:78px;}}
+/* ── Clickable stat cards ────────────────────────────────── */
+.sc-click{cursor:pointer;user-select:none;transition:transform .15s,box-shadow .15s;}
+.sc-click:hover{transform:translateY(-2px);box-shadow:var(--s2);}
+.sc-click:active{transform:translateY(0);}
+.sc-active{box-shadow:0 0 0 2.5px var(--ac),var(--s2)!important;}
+.sc-active-gr{box-shadow:0 0 0 2.5px #059669,var(--s2)!important;}
+.sc-active-rd{box-shadow:0 0 0 2.5px #DC2626,var(--s2)!important;}
+.sc-active-gy{box-shadow:0 0 0 2.5px #64748B,var(--s2)!important;}
+/* Reset filter button */
+.btn-reset{background:none;border:1.5px solid var(--bo);border-radius:var(--rs);padding:.45rem .875rem;font-size:.8125rem;font-family:"Sarabun",sans-serif;color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap;}
+.btn-reset:hover{background:var(--rdb);border-color:var(--rd);color:var(--rd);}
 </style>
 </head>
 <body>
@@ -371,11 +382,11 @@ textarea{resize:none;}
     <button class="bp" onclick="openEqM()"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>เพิ่มรายการ</button>
   </div>
   <div class="sc-g">
-    <div class="sc"><div class="sc-i" style="background:#EEF2FF;"><svg width="21" height="21" fill="none" stroke="#6366F1" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div><div class="sc-l">ทั้งหมด</div><div class="sc-v" style="color:#6366F1;" id="dc-t">0</div></div></div>
-    <div class="sc"><div class="sc-i" style="background:#ECFDF5;"><svg width="21" height="21" fill="none" stroke="#059669" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><div class="sc-l">ว่าง</div><div class="sc-v" style="color:#059669;" id="dc-a">0</div></div></div>
-    <div class="sc"><div class="sc-i" style="background:#FEF2F2;"><svg width="21" height="21" fill="none" stroke="#DC2626" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><div class="sc-l">ไม่ว่าง</div><div class="sc-v" style="color:#DC2626;" id="dc-b">0</div></div></div>
-    <div class="sc"><div class="sc-i" style="background:#F1F5F9;"><svg width="21" height="21" fill="none" stroke="#64748B" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div><div><div class="sc-l">จำหน่าย</div><div class="sc-v" style="color:#64748B;" id="dc-s">0</div></div></div>
-    <div class="sc"><div class="sc-i" style="background:#FFFBEB;"><svg width="21" height="21" fill="none" stroke="#D97706" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></div><div><div class="sc-l">เช่าแอคทีฟ</div><div class="sc-v" style="color:#D97706;" id="dc-r">0</div></div></div>
+    <div class="sc sc-click sc-active" id="sc-card-all" onclick="filterByStatCard('all')" title="แสดงทั้งหมด"><div class="sc-i" style="background:#EEF2FF;"><svg width="21" height="21" fill="none" stroke="#6366F1" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div><div class="sc-l">ทั้งหมด</div><div class="sc-v" style="color:#6366F1;" id="dc-t">0</div></div></div>
+    <div class="sc sc-click" id="sc-card-ว่าง" onclick="filterByStatCard('ว่าง')" title="กรองเฉพาะว่าง"><div class="sc-i" style="background:#ECFDF5;"><svg width="21" height="21" fill="none" stroke="#059669" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><div class="sc-l">ว่าง</div><div class="sc-v" style="color:#059669;" id="dc-a">0</div></div></div>
+    <div class="sc sc-click" id="sc-card-ไม่ว่าง" onclick="filterByStatCard('ไม่ว่าง')" title="กรองเฉพาะไม่ว่าง"><div class="sc-i" style="background:#FEF2F2;"><svg width="21" height="21" fill="none" stroke="#DC2626" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><div class="sc-l">ไม่ว่าง</div><div class="sc-v" style="color:#DC2626;" id="dc-b">0</div></div></div>
+    <div class="sc sc-click" id="sc-card-จำหน่าย" onclick="filterByStatCard('จำหน่าย')" title="กรองเฉพาะจำหน่าย"><div class="sc-i" style="background:#F1F5F9;"><svg width="21" height="21" fill="none" stroke="#64748B" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div><div><div class="sc-l">จำหน่าย</div><div class="sc-v" style="color:#64748B;" id="dc-s">0</div></div></div>
+    <div class="sc sc-click" id="sc-card-rental" onclick="setSection('rental')" title="ไปยังรายการยืม/เช่า" style="border-left:3px solid #D97706;"><div class="sc-i" style="background:#FFFBEB;"><svg width="21" height="21" fill="none" stroke="#D97706" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></div><div><div class="sc-l">เช่าแอคทีฟ <svg width="10" height="10" fill="none" stroke="#D97706" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div><div class="sc-v" style="color:#D97706;" id="dc-r">0</div></div></div>
   </div>
   <div class="ctabs" id="ctabs">
     <button class="ctab active" onclick="setCat('all',this)">ทั้งหมด <span id="ct-all"></span></button>
@@ -385,9 +396,13 @@ textarea{resize:none;}
   </div>
   <div class="fb">
     <div class="fb-sw"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg><input type="text" id="eq-s" placeholder="ค้นหาชื่ออุปกรณ์..." oninput="renderEq()"></div>
-    <select id="eq-fs" onchange="renderEq()"><option value="all">สถานะทั้งหมด</option><option value="ว่าง">ว่าง</option><option value="ไม่ว่าง">ไม่ว่าง</option><option value="จำหน่าย">จำหน่าย</option></select>
+    <select id="eq-fs" onchange="syncStatCardHL();renderEq()"><option value="all">สถานะทั้งหมด</option><option value="ว่าง">ว่าง</option><option value="ไม่ว่าง">ไม่ว่าง</option><option value="จำหน่าย">จำหน่าย</option></select>
     <select id="eq-so" onchange="renderEq()"><option value="name">เรียงตาม: ชื่อ</option><option value="cat">เรียงตาม: หมวดหมู่</option><option value="status">เรียงตาม: สถานะ</option><option value="date">เรียงตาม: วันที่เพิ่ม</option></select>
     <button class="sd" id="eq-dir" onclick="tEqDir()" title="สลับทิศทาง"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" id="eq-di"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg></button>
+    <button class="btn-reset" onclick="resetEqFilters()" title="ล้างตัวกรองทั้งหมด">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4l16 16M4 20L20 4"/></svg>
+      แสดงทั้งหมด
+    </button>
   </div>
   <div class="card"><div class="tw"><table>
     <thead><tr><th>#</th><th>รูป</th><th>ชื่อ</th><th>รุ่น</th><th>หมวดหมู่</th><th>สภาพ</th><th>ตำหนิ</th><th>วันที่เพิ่ม</th><th>สถานะ</th><th style="text-align:right;">จัดการ</th></tr></thead>
@@ -617,6 +632,32 @@ function setBtnLoading(id,on){
 }
 const thumbH=(e,sz=44)=>e.image?`<img class="eq-th" src="${e.image}" style="width:${sz}px;height:${sz}px;" onclick="event.stopPropagation();showLb(this.src)" title="ดูรูป">`:`<div class="th-ph" style="width:${sz}px;height:${sz}px;"><svg width="${Math.round(sz*.46)}" height="${Math.round(sz*.46)}" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`;
 
+// ── Stat card filter ──────────────────────────────────────────────────────────
+function filterByStatCard(status){
+  document.getElementById('eq-fs').value=status==='all'?'all':status;
+  syncStatCardHL();
+  renderEq();
+}
+function syncStatCardHL(){
+  const v=document.getElementById('eq-fs')?.value||'all';
+  document.querySelectorAll('.sc-click').forEach(c=>{
+    c.classList.remove('sc-active','sc-active-gr','sc-active-rd','sc-active-gy');
+  });
+  const map={all:'sc-active','ว่าง':'sc-active-gr','ไม่ว่าง':'sc-active-rd','จำหน่าย':'sc-active-gy'};
+  const el=document.getElementById('sc-card-'+(v==='all'?'all':v));
+  if(el&&map[v])el.classList.add(map[v]);
+}
+function resetEqFilters(){
+  document.getElementById('eq-fs').value='all';
+  document.getElementById('eq-s').value='';
+  // Reset category to all
+  eqCat='all';
+  document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.ctab')?.classList.add('active');
+  syncStatCardHL();
+  renderEq();
+}
+
 // ── Nav ───────────────────────────────────────────────────────────────────────
 function setSection(n){
   curSec=n;
@@ -674,7 +715,7 @@ function fRt(data,si,sti,pi,soi,dir){
 // ── Render Equipment ──────────────────────────────────────────────────────────
 function renderEq(){
   const data=fEq(),tb=document.getElementById('eq-tb'),em=document.getElementById('eq-em');
-  if(!data.length){tb.innerHTML='';em.style.display='';return;}
+  if(!data.length){tb.innerHTML='';em.style.display='';syncStatCardHL();return;}
   em.style.display='none';
   tb.innerHTML=data.map((e,i)=>`<tr>
     <td style="color:var(--t3);font-size:.73rem;">${i+1}</td>
@@ -688,6 +729,7 @@ function renderEq(){
     <td>${eqSB(e.status)}</td>
     <td>${ibBtns('openEqM('+e.id+')','delEq('+e.id+')')}</td>
   </tr>`).join('');
+  syncStatCardHL();
 }
 
 // ── Render Rental Table ───────────────────────────────────────────────────────

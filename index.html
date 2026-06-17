@@ -912,16 +912,53 @@ async function saveRental(){
   const fin=status==='เสร็จสิ้น'||status==='ยกเลิก';
   const toRel=fin?[...new Set([...origEq,...selEq])]:origEq.filter(i=>!selEq.includes(i));
   const toBsy=fin?[]:selEq;
+
+  // บันทึกสถานะเดิมไว้สำหรับ rollback
+  const snapshots={};
+  [...toRel,...toBsy].forEach(eid=>{const e=equipment.find(x=>x.id===eid);if(e)snapshots[eid]=e.status;});
+
+  // อัพเดทสถานะอุปกรณ์
   const eqUpd=[...toRel.map(eid=>{const e=equipment.find(x=>x.id===eid);if(e&&e.status!=='จำหน่าย'){e.status='ว่าง';return sb.from('equipment').update({status:'ว่าง'}).eq('id',eid);}}),...toBsy.map(eid=>{const e=equipment.find(x=>x.id===eid);if(e&&e.status!=='จำหน่าย'){e.status='ไม่ว่าง';return sb.from('equipment').update({status:'ไม่ว่าง'}).eq('id',eid);}})].filter(Boolean);
   await Promise.all(eqUpd);
+
   const obj={renterName,startDate,startTime,endDate,endTime,contactName,contactPhone,status,priority,equipmentCondition,defects,notes,equipmentIds:selEq,returnImages:returnImgs};
   const payload=rtDB(obj);
+
+  // ฟังก์ชัน rollback คืนสถานะอุปกรณ์เมื่อเกิด error
+  async function rollbackEq(){
+    const rb=Object.entries(snapshots).map(([eid,s])=>{const e=equipment.find(x=>x.id===+eid);if(e){e.status=s;return sb.from('equipment').update({status:s}).eq('id',+eid);}}).filter(Boolean);
+    await Promise.all(rb);
+    renderAll();
+  }
+
+  let dbErr=null;
   if(fin){
-    if(id){await sb.from('rentals').delete().eq('id',id);rentals=rentals.filter(r=>r.id!==id);const ih=history.find(r=>r.id===id);if(ih){const{data,e2}=await sb.from('history').update(payload).eq('id',id).select().single();if(!e2){const hi=history.findIndex(r=>r.id===id);if(hi>=0)history[hi]=mRt(data);}}else{const{data,e2}=await sb.from('history').insert(payload).select().single();if(!e2)history.unshift(mRt(data));}}
-    else{const{data,e2}=await sb.from('history').insert(payload).select().single();if(!e2)history.unshift(mRt(data));}
+    if(id){
+      await sb.from('rentals').delete().eq('id',id);
+      rentals=rentals.filter(r=>r.id!==id);
+      const ih=history.find(r=>r.id===id);
+      if(ih){const{data,error}=await sb.from('history').update(payload).eq('id',id).select().single();if(error){dbErr=error;}else{const hi=history.findIndex(r=>r.id===id);if(hi>=0)history[hi]=mRt(data);}}
+      else{const{data,error}=await sb.from('history').insert(payload).select().single();if(error){dbErr=error;}else{history.unshift(mRt(data));}}
+    }else{
+      const{data,error}=await sb.from('history').insert(payload).select().single();
+      if(error){dbErr=error;}else{history.unshift(mRt(data));}
+    }
   }else{
-    if(id){const ir=rentals.find(r=>r.id===id);if(ir){const{data,e2}=await sb.from('rentals').update(payload).eq('id',id).select().single();if(!e2){const ri=rentals.findIndex(r=>r.id===id);if(ri>=0)rentals[ri]=mRt(data);}}else{await sb.from('history').delete().eq('id',id);history=history.filter(r=>r.id!==id);const{data,e2}=await sb.from('rentals').insert(payload).select().single();if(!e2)rentals.unshift(mRt(data));}}
-    else{const{data,e2}=await sb.from('rentals').insert(payload).select().single();if(!e2)rentals.unshift(mRt(data));}
+    if(id){
+      const ir=rentals.find(r=>r.id===id);
+      if(ir){const{data,error}=await sb.from('rentals').update(payload).eq('id',id).select().single();if(error){dbErr=error;}else{const ri=rentals.findIndex(r=>r.id===id);if(ri>=0)rentals[ri]=mRt(data);}}
+      else{await sb.from('history').delete().eq('id',id);history=history.filter(r=>r.id!==id);const{data,error}=await sb.from('rentals').insert(payload).select().single();if(error){dbErr=error;}else{rentals.unshift(mRt(data));}}
+    }else{
+      const{data,error}=await sb.from('rentals').insert(payload).select().single();
+      if(error){dbErr=error;}else{rentals.unshift(mRt(data));}
+    }
+  }
+
+  if(dbErr){
+    await rollbackEq();
+    const hint=dbErr.message?.includes('column')?'\n\n💡 กรุณาตรวจสอบว่ารัน SQL สร้าง table ครบแล้วหรือยัง':'';
+    toast('⚠️ บันทึกไม่สำเร็จ: '+dbErr.message+hint,'err');
+    return;
   }
   closeRtM();renderAll();toast(id?'แก้ไขเรียบร้อย':'เพิ่มรายการเรียบร้อย');
 }

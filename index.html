@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4/dist/l10n/th.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{--bg:#F1F5F9;--sf:#fff;--sb:#1E293B;--sbh:#334155;--ac:#6366F1;--ach:#4F46E5;--al:#EEF2FF;--gr:#059669;--grb:#ECFDF5;--rd:#DC2626;--rdb:#FEF2F2;--am:#D97706;--amb:#FFFBEB;--bl:#2563EB;--blb:#EFF6FF;--or:#C2410C;--orb:#FFF7ED;--pu:#7C3AED;--pub:#F5F3FF;--gy:#475569;--gyb:#F1F5F9;--tx:#0F172A;--t2:#475569;--t3:#94A3B8;--bo:#E2E8F0;--s1:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);--s2:0 4px 12px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.05);--sl:0 20px 60px rgba(0,0,0,.15),0 4px 12px rgba(0,0,0,.08);--r:12px;--rs:8px;}
 *{font-family:"Sarabun",sans-serif;box-sizing:border-box;margin:0;padding:0;}
@@ -714,6 +716,7 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let equipment=[],rentals=[],history=[],receiptsDB=[];
+let lastReceiptData=null;
 let curSec='eq',curView='table',calDate=new Date();
 let eqCat='all',eqDir='asc',rtDir='desc',hiDir='desc';
 let msOpen=false,curImg=null,returnImgs=[],selEqSet=new Set();
@@ -1514,6 +1517,128 @@ body{background:#f5f5f5;display:flex;align-items:center;justify-content:center;m
   w.document.close();
 }
 
+// ── Receipt Download (runs in main page context) ──────────────────────────────
+const RCPT_MAX_ROWS = 9; // max items per A4 page
+
+async function renderToCanvas(innerHtml) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;height:990px;overflow:hidden;background:white;z-index:-999;font-family:Sarabun,sans-serif;';
+  wrap.innerHTML = innerHtml;
+  document.body.appendChild(wrap);
+  await new Promise(r => setTimeout(r, 300));
+  try {
+    return await html2canvas(wrap, {
+      scale:2, useCORS:true, allowTaint:true, logging:false,
+      backgroundColor:'#ffffff', width:700, height:990
+    });
+  } finally { document.body.removeChild(wrap); }
+}
+
+function buildA4PageHtml(data, pageItems, pageNum, totalPages) {
+  // Pad items to RCPT_MAX_ROWS with empty rows
+  let rowsHtml = '';
+  pageItems.forEach((item,i) => {
+    const p = parseFloat((item.price||'0').replace(/[^\d.]/g,'')) || 0;
+    rowsHtml += `<tr style="background:${i%2===1?'#f0f9ff':'white'}">
+      <td style="text-align:center;color:#64748b;padding:6px 10px;font-size:12px;">${i+1+(pageNum-1)*RCPT_MAX_ROWS}</td>
+      <td style="padding:6px 10px;font-weight:500;font-size:12px;">${esc(item.name)}</td>
+      <td style="padding:6px 10px;text-align:right;font-size:12px;">${p>0?fmtMoney(p):(item.price||'-')}</td>
+    </tr>`;
+  });
+  for(let i=pageItems.length; i<RCPT_MAX_ROWS; i++) {
+    rowsHtml += `<tr style="background:${i%2===1?'#f0f9ff':'white'}">
+      <td style="padding:6px 10px;"></td>
+      <td style="padding:6px 10px;">&nbsp;</td>
+      <td style="padding:6px 10px;"></td>
+    </tr>`;
+  }
+  const total = pageItems.reduce((s,it)=>{ const p=parseFloat((it.price||'0').replace(/[^\d.]/g,''));return s+(isNaN(p)?0:p);},0);
+  const pageNote = totalPages>1 ? `หน้าที่ ${pageNum}/${totalPages}` : '';
+  return `<div style="background:white;width:700px;height:990px;box-sizing:border-box;padding:24px 28px 16px;display:flex;flex-direction:column;font-family:Sarabun,sans-serif;">
+  <div style="text-align:center;margin-bottom:10px;">
+    <img src="${LOGO_B64}" style="width:90px;mix-blend-mode:multiply;margin-bottom:2px;">
+    <div style="font-size:20px;font-weight:800;color:#0f172a;margin-top:-4px;">ใบเสร็จ</div>
+    <div style="font-size:13px;font-weight:700;color:#0f172a;letter-spacing:.05em;">THE FIRST CHEERLEADER &amp; PRODUCTION</div>
+  </div>
+  <div style="border:none;border-top:2.5px solid #0891b2;margin:6px 0;"></div>
+  <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:4px;align-items:start;">
+    <div>
+      <div style="display:flex;font-size:11.5px;line-height:1.8;"><span style="color:#64748b;min-width:72px;flex-shrink:0;">ชื่อลูกค้า</span><span style="font-weight:500;">${esc(data.toName)}</span></div>
+      ${data.contact?`<div style="display:flex;font-size:11.5px;line-height:1.8;"><span style="color:#64748b;min-width:72px;flex-shrink:0;">ผู้ติดต่อ</span><span style="font-weight:500;">${esc(data.contact)}${data.phone?' &nbsp;โทร.'+esc(data.phone):''}</span></div>`:''}
+    </div>
+    <div style="text-align:right;"><div style="font-size:10px;color:#64748b;">เลขที่</div><div style="font-size:18px;font-weight:800;color:#0891b2;">${esc(data.rcptNum)}</div>${pageNote?`<div style="font-size:10px;color:#94a3b8;">${pageNote}</div>`:''}</div>
+  </div>
+  <div style="border:none;border-top:1px solid #e2e8f0;margin:5px 0;"></div>
+  <div style="margin-bottom:8px;">
+    <div style="display:flex;font-size:11.5px;line-height:1.7;"><span style="color:#64748b;min-width:72px;">ผู้ออก</span><span style="font-weight:700;">${esc(data.fromName)}</span></div>
+    <div style="display:flex;font-size:11.5px;line-height:1.7;"><span style="color:#64748b;min-width:72px;">ที่อยู่</span><span>${esc(data.fromAddr)}</span></div>
+    <div style="display:flex;font-size:11.5px;line-height:1.7;"><span style="color:#64748b;min-width:72px;">วันที่</span><span>${fmtDateThai(data.date)}${data.time?' เวลา '+data.time:''}</span></div>
+  </div>
+  <table style="width:100%;border-collapse:separate;border-spacing:0;border:1.5px solid #bae6fd;border-radius:10px;overflow:hidden;">
+    <thead><tr>
+      <th style="text-align:center;width:44px;padding:8px;color:white;font-size:11px;background:#0891b2;font-weight:600;">ลำดับ</th>
+      <th style="padding:8px;color:white;font-size:11px;text-align:left;background:#0891b2;font-weight:600;">รายการสินค้า</th>
+      <th style="padding:8px;color:white;font-size:11px;text-align:right;background:#0891b2;font-weight:600;">ราคา/หน่วย</th>
+    </tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;padding:7px 10px;border-top:1.5px solid #bae6fd;font-size:11.5px;">
+    <span style="color:#64748b;">${data.note&&pageNum===totalPages?`<b>หมายเหตุ</b> ${esc(data.note)}`:'หมายเหตุ'}</span>
+    <span><span style="color:#64748b;margin-right:12px;">ราคารวม</span><b style="font-size:13px;">${pageNum===totalPages?fmtMoney(data.total):'—'}</b></span>
+  </div>
+  <div style="border:2px solid #0891b2;border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:flex-start;margin:6px 0;">
+    <div style="font-size:13px;font-weight:700;color:#0f172a;padding-top:2px;">จำนวนเงินรวมทั้งสิ้น</div>
+    <div style="text-align:right;"><div style="font-size:20px;font-weight:800;color:#0f172a;">${pageNum===totalPages?fmtMoney(data.total):'(ดูหน้าสุดท้าย)'}</div><div style="font-size:10px;color:#64748b;">(${pageNum===totalPages?bahtText(data.total):''})</div></div>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:8px;align-items:flex-start;flex:1;">
+    <div style="flex-shrink:0;text-align:center;">
+      <div style="font-size:11.5px;font-weight:700;color:#0f172a;margin-bottom:5px;">การชำระเงิน</div>
+      <img src="${QR_B64}" style="width:90px;height:90px;object-fit:contain;border:1px solid #e2e8f0;border-radius:6px;padding:3px;display:block;">
+      <div style="font-size:9px;color:#64748b;margin-top:3px;">PromptPay · กรุงไทย · ภัทรพล สุฉายา</div>
+    </div>
+    <div style="flex:1;padding-top:4px;">
+      <div style="font-size:11.5px;font-weight:700;color:#0f172a;margin-bottom:28px;">ผู้รับเงิน</div>
+      <div style="font-size:12px;font-weight:600;color:#0f172a;">${esc(data.fromName)}</div>
+    </div>
+  </div>
+  <div style="text-align:center;padding:8px 0 0;border-top:2.5px solid #0891b2;font-size:15px;font-weight:700;color:#0f172a;">— ขอบคุณที่ใช้บริการ —</div>
+</div>`;
+}
+
+window.downloadReceipt = async function(type) {
+  if(!lastReceiptData){ toast('ไม่พบข้อมูลใบเสร็จ','err'); return; }
+  const data = lastReceiptData;
+  const items = data.items||[];
+  // Split into pages
+  const pages = [];
+  if(!items.length) pages.push([]);
+  else for(let i=0;i<items.length;i+=RCPT_MAX_ROWS) pages.push(items.slice(i,i+RCPT_MAX_ROWS));
+
+  try {
+    if(type==='pdf') {
+      const {jsPDF} = window.jspdf;
+      const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const pw = pdf.internal.pageSize.getWidth();
+      for(let p=0;p<pages.length;p++) {
+        if(p>0) pdf.addPage();
+        const canvas = await renderToCanvas(buildA4PageHtml(data,pages[p],p+1,pages.length));
+        pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,pw,(canvas.height*pw)/canvas.width);
+      }
+      pdf.save('ใบเสร็จ-'+data.rcptNum+'.pdf');
+    } else {
+      for(let p=0;p<pages.length;p++) {
+        const canvas = await renderToCanvas(buildA4PageHtml(data,pages[p],p+1,pages.length));
+        const a = document.createElement('a');
+        const sfx = pages.length>1?'-หน้า'+(p+1):'';
+        a.download='ใบเสร็จ-'+data.rcptNum+sfx+'.png';
+        a.href=canvas.toDataURL('image/png');
+        document.body.appendChild(a);a.click();document.body.removeChild(a);
+        if(p<pages.length-1) await new Promise(r=>setTimeout(r,300));
+      }
+    }
+  } catch(e) { toast('ดาวน์โหลดไม่สำเร็จ: '+(e&&e.message?e.message:String(e)),'err'); }
+};
+
 // ── Thai Baht Text ────────────────────────────────────────────────────────────
 function bahtText(amount) {
   if(!amount || amount===0) return 'ศูนย์บาทถ้วน';
@@ -1731,11 +1856,8 @@ function reprintReceipt(id) {
   items.forEach((item,i)=>{
     const p=parseFloat(item.price||0);
     const priceStr=p>0?fmtMoney(p):(item.price||'-');
-    itemsHtml+=`<tr><td style="text-align:center;color:#64748b;padding:7px 10px;">${i+1}</td><td style="padding:7px 10px;font-weight:500;">${esc(item.name)}</td><td style="padding:7px 10px;text-align:right;">${priceStr}</td></tr>`;
+    itemsHtml+=`<tr style="background:${i%2===1?'#f0f9ff':'white'}"><td style="text-align:center;color:#64748b;padding:7px 10px;">${i+1}</td><td style="padding:7px 10px;font-weight:500;">${esc(item.name)}</td><td style="padding:7px 10px;text-align:right;">${priceStr}</td></tr>`;
   });
-  for(let i=items.length;i<minRows;i++){
-    itemsHtml+=`<tr><td style="padding:7px 10px;text-align:center;color:#e2e8f0;">${i+1}</td><td style="padding:7px 10px;">&nbsp;</td><td></td></tr>`;
-  }
   const html = buildReceiptHTML({
     rcptNum:r.rcpt_no||'—', date:r.rcpt_date||'', time:r.rcpt_time||'',
     fromName:r.from_name||'', fromAddr:r.from_addr||'',
@@ -1743,6 +1865,13 @@ function reprintReceipt(id) {
     contact:r.contact_name||'', phone:r.contact_phone||'',
     note:r.note||'', itemsHtml, total:parseFloat(r.total||0)
   });
+  lastReceiptData = {
+    rcptNum:r.rcpt_no||'—', date:r.rcpt_date||'', time:r.rcpt_time||'',
+    fromName:r.from_name||'', fromAddr:r.from_addr||'',
+    toName:r.to_name||'', toAddr:r.to_addr||'',
+    contact:r.contact_name||'', phone:r.contact_phone||'',
+    note:r.note||'', items:r.items||[], total:parseFloat(r.total||0)
+  };
   const w=window.open('','_blank','width=760,height=900');
   w.document.write(html); w.document.close();
 }
@@ -1791,10 +1920,6 @@ function genRcpt2() {
       <td style="padding:7px 10px;text-align:right;">${priceStr}</td>
     </tr>`;
   });
-  const minRows=Math.max(5,items.length);
-  for(let i=items.length;i<minRows;i++){
-    itemsHtml+=`<tr><td style="padding:7px 10px;text-align:center;color:#e2e8f0;">${i+1}</td><td style="padding:7px 10px;">&nbsp;</td><td></td></tr>`;
-  }
 
   saveReceiptToDB({
     rcpt_no:rcptNum,rcpt_date:date,rcpt_time:time,
@@ -1803,6 +1928,9 @@ function genRcpt2() {
     contact_name:contact,contact_phone:phone,
     items:items,total:total,note:note
   });
+
+  // Store for cross-window download
+  lastReceiptData = {rcptNum,date,time,fromName,fromAddr,toName,toAddr,contact,phone,note,items,total};
 
   closeRcptM();
   const html=buildReceiptHTML({rcptNum,date,time,fromName,fromAddr,toName,toAddr,contact,phone,note,itemsHtml,total});
@@ -1907,10 +2035,29 @@ table.tbl{width:100%;border-collapse:separate;border-spacing:0;border:1.5px soli
     </div>
   </div>
   <div class="footer">— ขอบคุณที่ใช้บริการ —</div>
-  <div class="no-print" style="text-align:center;margin-top:16px;">
-    <button onclick="window.print()" style="background:#0891b2;color:white;border:none;padding:9px 28px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:600;">🖨️ พิมพ์ / บันทึก PDF</button>
+  <div class="no-print" style="text-align:center;margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+    <button onclick="window.print()" style="background:#475569;color:white;border:none;padding:9px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:600;">🖨️ พิมพ์</button>
+    <button id="btn-pdf" onclick="dlPDF(this)" style="background:#0891b2;color:white;border:none;padding:9px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:600;">📄 บันทึก PDF</button>
+    <button id="btn-img" onclick="dlImg(this)" style="background:#059669;color:white;border:none;padding:9px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:600;">🖼️ บันทึกรูปภาพ</button>
   </div>
-</div></body></html>`;
+</div>
+<script>
+async function dlPDF(btn){
+  if(!window.opener||!window.opener.downloadReceipt){alert('กรุณาเปิดจากระบบหลัก');return;}
+  const orig=btn.textContent;btn.textContent='⏳ กำลังสร้าง PDF...';btn.disabled=true;
+  try{await window.opener.downloadReceipt('pdf');}
+  catch(e){alert('เกิดข้อผิดพลาด: '+(e&&e.message?e.message:String(e)));}
+  btn.textContent=orig;btn.disabled=false;
+}
+async function dlImg(btn){
+  if(!window.opener||!window.opener.downloadReceipt){alert('กรุณาเปิดจากระบบหลัก');return;}
+  const orig=btn.textContent;btn.textContent='⏳ กำลังสร้างรูป...';btn.disabled=true;
+  try{await window.opener.downloadReceipt('img');}
+  catch(e){alert('เกิดข้อผิดพลาด: '+(e&&e.message?e.message:String(e)));}
+  btn.textContent=orig;btn.disabled=false;
+}
+<\/script>
+</body></html>`;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
